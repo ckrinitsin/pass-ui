@@ -1,5 +1,6 @@
 #include "shell-scripts.h"
 
+// Gets the whole shell script and opens a pipe for that
 FILE *get_command_pipe(char *arg) {
 	FILE *pipe = popen(arg, "r");
 	if (pipe == NULL) {
@@ -9,6 +10,8 @@ FILE *get_command_pipe(char *arg) {
 	return pipe;
 }
 
+// Util function for setting up a string which represents a shell script
+// for getting all password entries
 FILE *findscript(char *arg) {
 	size_t arg_size = strlen(arg);
 
@@ -27,6 +30,7 @@ FILE *findscript(char *arg) {
 	return pipe;
 }
 
+// Wrapper function to get the number of password entries
 size_t get_number_files(char *vault_dir) {
 	size_t max_number_digits = 20;
 	FILE *pipe = countscript(vault_dir);
@@ -37,6 +41,8 @@ size_t get_number_files(char *vault_dir) {
 	return result;
 }
 
+// Util function for setting up a string which represents a shell script
+// for getting the number password entries
 FILE *countscript(char *arg) {
 	size_t arg_size = strlen(arg);
 

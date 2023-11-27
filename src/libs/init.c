@@ -7,13 +7,16 @@ void load_vault_path(char *path) {
 	FILE *dir_ptr = fopen(vault_name, "r");
 
 	if (dir_ptr == NULL) {
+        // save file doesn't exist
+
 		// set up a string for default path
 		path = getenv("HOME");
 		strcat(path, "/.password-store/");
 
-		// check if that default path exists
+
 		DIR *dir = opendir(path);
 		if (dir) {
+            // directory exists
 			closedir(dir);
 
 			// create file if doesn't exist
@@ -31,10 +34,13 @@ void load_vault_path(char *path) {
 			printf("give me location of your password-store");
 		}
 		else {
+            // error
 			fprintf(stderr, "Could not check for directory");
+            exit(-1);
 		}
 	}
 	else {
+        // save file exists, try to read it
 		if (fgets(path, max_path_size, dir_ptr) == NULL) {
 			fclose(dir_ptr);
 			fprintf(stderr, "Couldn't read file");
@@ -45,31 +51,37 @@ void load_vault_path(char *path) {
 	}
 }
 
-int heyo(struct vault *vault) {
-    size_t number_files = get_number_files(vault->vault_dir);
+char **get_all_entries(struct vault *vault) {
 	// open a pipe to the command
 	FILE *pipe = findscript(vault->vault_dir);
 
-	// read the output of the command into a string
-	char buffer[max_path_size];
-	char *directories[number_files];
+	// allocate entries array
+	char **directories = malloc(vault->count * sizeof(char *));
+	if (directories == NULL) {
+		fprintf(stderr, "malloc failed");
+		exit(-1);
+	}
 
-    for (size_t i = 0; i < number_files; i++) {
-        if (fgets(buffer, sizeof(buffer), pipe) == NULL) break;
+    // allocates memory for every entry and tries to read the pipe,
+    // storing the file into the array
+	for (size_t i = 0; i < vault->count; i++) {
+		directories[i] = malloc(max_path_size);
+		if (directories[i] == NULL) {
+			fprintf(stderr, "malloc failed");
+			exit(-1);
+		}
 
-        directories[i] = strdup(buffer);
-    }
+		if (fgets(directories[i], max_path_size, pipe) == NULL) {
+			fprintf(stderr, "couldn't read all passwords");
+			exit(-1);
+		}
+	}
 
 	// close the pipe
 	if (pclose(pipe) == -1) {
 		perror("pclose failed");
-		return 1;
+		exit(-1);
 	}
 
-	for (size_t i = 0; i < number_files; i++) {
-		printf("Directory %zu: %s\n", i + 1, directories[i]);
-		free(directories[i]);
-	}
-
-	return 0;
+	return directories;
 }
