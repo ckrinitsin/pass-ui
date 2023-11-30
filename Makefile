@@ -1,9 +1,9 @@
-programs := src/main.c src/libs/init.c src/libs/shell-scripts.c 
-flags := -O3 -Wall -Wextra -Wpedantic -lncurses
+programs := src/main.cpp src/libs/app/init.cpp src/libs/utils/shell-scripts.cpp src/libs/ui/init-ui.cpp
+flags := -std=c++20 -Wall -Wextra -Wpedantic -lncurses -lmenu
 
 all:
-	gcc ${programs} ${flags} -o main 
+	g++ ${programs} ${flags} -o main -O3
 debug:
-	gcc ${programs} ${flags} -g -o debug && gdb ./debug
+	g++ ${programs} ${flags} -g -o debug -O0 && gdb ./debug
 clear:
-	rm -f main vault-dir.txt debug
+	rm -f main vault-dir.txt debug vgcore.*
