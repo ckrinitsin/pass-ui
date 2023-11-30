@@ -1,4 +1,4 @@
-programs := src/main.cpp src/libs/app/init.cpp src/libs/utils/shell-scripts.cpp src/libs/ui/init-ui.cpp
+programs := src/main.cpp src/libs/app/init.cpp src/libs/utils/shell-scripts.cpp src/libs/ui/init-ui.cpp src/libs/ui/menu_navigation.cpp src/libs/ui/pattern_matching.cpp
 flags := -std=c++20 -Wall -Wextra -Wpedantic -lncurses -lmenu
 
 all:

@@ -1,57 +1,74 @@
 #include "init-ui.h"
+#include "menu_navigation.h"
 #include <algorithm>
-#include <curses.h>
+#include <eti.h>
 #include <iostream>
-#include <menu.h>
 #include <sstream>
 #include <vector>
 
 void init_ui(struct vault *vault) {
 	ITEM **items;
-	int c;
 	MENU *menu;
 	WINDOW *menu_win;
 
 	// initialize
 	initscr();
+    
+    // start color mode and preserve standard background
 	start_color();
 	use_default_colors();
+
+
 	cbreak();
+	keypad(stdscr, TRUE);
+
+    // don't print inputs and make the cursor invisible
 	noecho();
 	curs_set(0);
-	keypad(stdscr, TRUE);
+
+    // initialize colors
 	init_pair(1, COLOR_RED, -1);
-	init_pair(2, COLOR_CYAN, -1);
+	init_pair(2, COLOR_BLUE, -1);
 
 
-	// create items and menu
+    // initializes items
 	items = (ITEM **)malloc((vault->count_entries + 1 + vault->count_directories) * sizeof(ITEM *));
+    if (items == NULL) {
+        fprintf(stderr, "could not malloc items\n");
+        exit(-1);
+    }
+
+	// create items
 	for (size_t i = 0; i < vault->count_entries + vault->count_directories; i++) {
 		if (i < vault->count_entries + vault->count_directories - 1 && (vault->api_entry[i + 1]).find(vault->api_entry[i]) != std::string::npos) {
-            // if directory
-			// item_opts_off(items[i], O_SELECTABLE);
+            // if this item is a directory
             vault->entry[i] += "/";
-		} else {
-
-        }
+		}
         items[i] = new_item(vault->entry[i].c_str(), NULL);
 	}
+
+    // create menu with created items
 	menu = new_menu((ITEM **)items);
-    set_menu_fore(menu, COLOR_PAIR(1));
 
 	// create menu window
-	menu_win = newwin(LINES, COLS, 0, 0);
+	menu_win = newwin(LINES-1, COLS-1, 0, 0);
 	keypad(menu_win, TRUE);
 
 	// set main and sub window
 	set_menu_win(menu, menu_win);
-	set_menu_sub(menu, derwin(menu_win, LINES - 2, COLS - 2, 1, 1));
-	set_menu_format(menu, LINES - 2, 1);
+	set_menu_sub(menu, derwin(menu_win, LINES - 3, COLS - 2, 1, 1));
+	set_menu_format(menu, LINES - 3, 1);
 
 
 	// print a border and set mark
 	box(menu_win, 0, 0);
-	set_menu_mark(menu, " * ");
+    if (vault->entry[0].find('/') != std::string::npos) {
+        set_menu_mark(menu, "   ");
+        set_menu_fore(menu, COLOR_PAIR(2));
+    } else {
+        set_menu_mark(menu, " * ");
+        set_menu_fore(menu, COLOR_PAIR(1));
+    }
 	refresh();
 
 	// post menu
@@ -60,56 +77,8 @@ void init_ui(struct vault *vault) {
 
 	refresh();
 
-	// navigation (own file)
-	bool g = false;
-	while ((c = wgetch(menu_win)) != 'q') {
-		switch (c) {
-		case KEY_DOWN:
-		case 'j':
-			menu_driver(menu, REQ_DOWN_ITEM);
-			break;
-		case KEY_UP:
-		case 'k':
-			menu_driver(menu, REQ_UP_ITEM);
-			break;
-		case KEY_NPAGE:
-			menu_driver(menu, REQ_SCR_DPAGE);
-			break;
-		case KEY_PPAGE:
-			menu_driver(menu, REQ_SCR_UPAGE);
-			break;
-		case 'G':
-			menu_driver(menu, REQ_LAST_ITEM);
-			break;
-		case 'g':
-			if (g) {
-				menu_driver(menu, REQ_FIRST_ITEM);
-				g = false;
-			}
-			else {
-				g = true;
-			}
-			break;
-        case 'p':
-            set_menu_pattern(menu, "");
-            break;
-        case ':':
-            // char p = getch();
-            set_menu_pattern(menu, "gra");
-            break;
-		}
-		if (c != 'g')
-			g = false;
-
-        ITEM *cur_item = current_item(menu);
-        std::string cur_item_name(item_name(cur_item));
-        if (cur_item_name.find('/') != std::string::npos) {
-            set_menu_fore(menu, COLOR_PAIR(2));
-        } else {
-            set_menu_fore(menu, COLOR_PAIR(1));
-        }
-		wrefresh(menu_win);
-	}
+	// navigation
+    navigation(menu, menu_win);
 
 	/* Unpost and free all the memory taken up */
 	unpost_menu(menu);
