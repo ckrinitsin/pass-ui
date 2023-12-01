@@ -1,10 +1,11 @@
-#include <dirent.h>
-#include <errno.h>
+#include "../utils/shell-scripts.h"
+
+#include <filesystem>
+#include <fstream>
 #include <memory>
 #include <string>
-#include <stdio.h>
-#include "../utils/shell-scripts.h"
-#include "../utils/structs.h"
+#include <string.h>
+#include <vector>
 
 // Defines the max length of a directory name
 #define max_path_size 512

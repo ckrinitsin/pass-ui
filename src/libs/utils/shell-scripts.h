@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <string>
 
 FILE *get_command_pipe(std::string arg);

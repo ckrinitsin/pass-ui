@@ -1,9 +1,4 @@
 #include "init.h"
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <vector>
 
 std::string load_vault_path() {
 	std::string vault_name{"vault-dir.txt"};
@@ -37,7 +32,7 @@ std::string load_vault_path() {
 		save_file.open(vault_name);
 
 		// read file into char* and convert to string
-        std::string result((std::istreambuf_iterator<char>(save_file)), std::istreambuf_iterator<char>());
+		std::string result((std::istreambuf_iterator<char>(save_file)), std::istreambuf_iterator<char>());
 
 		// close file and return string
 		save_file.close();
@@ -47,12 +42,13 @@ std::string load_vault_path() {
 
 std::vector<std::string> get_all_entries(std::string vault_dir, size_t count, bool api) {
 	// open a pipe to the command and count the number of entries
-    FILE *pipe;
-    if (api) {
-        pipe = findscript_api(vault_dir);
-    } else {
-        pipe = findscript(vault_dir);
-    }
+	FILE *pipe;
+	if (api) {
+		pipe = findscript_api(vault_dir);
+	}
+	else {
+		pipe = findscript(vault_dir);
+	}
 
 	// allocate entries vector and declare a buffer
 	std::vector<std::string> entries(count, "");
@@ -65,7 +61,7 @@ std::vector<std::string> get_all_entries(std::string vault_dir, size_t count, bo
 			exit(-1);
 		}
 
-        *(buffer+strlen(buffer)-1) = '\0';
+		*(buffer + strlen(buffer) - 1) = '\0';
 		entries[i] = buffer;
 	}
 
