@@ -6,10 +6,6 @@ FILE *findscript(std::string arg);
 
 FILE *findscript_api(std::string arg);
 
-size_t get_number_files(std::string vault_dir);
+size_t get_number_entries(std::string vault_dir);
 
 FILE *countscript(std::string arg);
-
-size_t get_number_directories(std::string vault_dir);
-
-FILE *dircountscript(std::string arg);

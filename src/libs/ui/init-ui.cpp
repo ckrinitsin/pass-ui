@@ -28,15 +28,15 @@ void init_ui(struct vault *vault) {
 	set_escdelay(0);
 
 	// initializes items
-	items = (ITEM **)malloc((vault->count_entries + 1 + vault->count_directories) * sizeof(ITEM *));
+	items = (ITEM **)malloc((vault->count_entries + 1) * sizeof(ITEM *));
 	if (items == NULL) {
 		fprintf(stderr, "could not malloc items\n");
 		exit(-1);
 	}
 
 	// create items
-	for (size_t i = 0; i < vault->count_entries + vault->count_directories; i++) {
-		if (i < vault->count_entries + vault->count_directories - 1 && (vault->api_entry[i + 1]).find(vault->api_entry[i]) != std::string::npos) {
+	for (size_t i = 0; i < vault->count_entries; i++) {
+		if (i < vault->count_entries - 1 && (vault->api_entry[i + 1]).find(vault->api_entry[i]) != std::string::npos) {
 			// if this item is a directory
 			vault->entry[i] += "/";
 		}

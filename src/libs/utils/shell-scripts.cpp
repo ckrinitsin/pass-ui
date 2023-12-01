@@ -25,7 +25,7 @@ FILE *findscript_api(std::string arg) {
 }
 
 // Wrapper function to get the number of password entries
-size_t get_number_files(std::string vault_dir) {
+size_t get_number_entries(std::string vault_dir) {
 	FILE *pipe = countscript(vault_dir);
 	char output[max_number_digits];
 	fgets(output, max_number_digits, pipe);
@@ -37,20 +37,6 @@ size_t get_number_files(std::string vault_dir) {
 // Util function for setting up a string which represents a shell script
 // for getting the number password entries
 FILE *countscript(std::string arg) {
-	std::string command = "cd " + arg + "\nfind . -type d -name '.git' -prune -o -name '*.gpg' -type f -print | wc -l";
-	return get_command_pipe(command);
-}
-
-size_t get_number_directories(std::string vault_dir) {
-	FILE *pipe = dircountscript(vault_dir);
-	char output[max_number_digits];
-	fgets(output, max_number_digits, pipe);
-	size_t result = strtol(output, NULL, 10);
-	pclose(pipe);
-	return result;
-}
-
-FILE *dircountscript(std::string arg) {
-	std::string command = "cd " + arg + "\nls -lR | grep ^d | wc -l";
+	std::string command = "cd " + arg + "\nfind . -type f ! -name '*.gpg' | tree -i -f | head -n -2 | tail -n +2 | wc -l";
 	return get_command_pipe(command);
 }
