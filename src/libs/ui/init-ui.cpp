@@ -3,7 +3,7 @@
 void init_ui(struct vault *vault) {
 	ITEM **items;
 	MENU *menu;
-	WINDOW *menu_win;
+	std::vector<WINDOW *> windows(4, NULL);
 
 	// initialize
 	initscr();
@@ -11,7 +11,6 @@ void init_ui(struct vault *vault) {
 	// start color mode and preserve standard background
 	start_color();
 	use_default_colors();
-
 
 	cbreak();
 	keypad(stdscr, TRUE);
@@ -21,8 +20,7 @@ void init_ui(struct vault *vault) {
 	curs_set(0);
 
 	// initialize colors
-	init_pair(1, COLOR_RED, -1);
-	init_pair(2, COLOR_BLUE, -1);
+	init_color_pairs();
 
 	// set delay after escape to 0
 	set_escdelay(0);
@@ -43,38 +41,32 @@ void init_ui(struct vault *vault) {
 		items[i] = new_item(vault->entry[i].c_str(), NULL);
 	}
 
+	// set last entry to NULL, to indicate the end of the menus
+	items[vault->count_entries] = NULL;
+
 	// create menu with created items
 	menu = new_menu((ITEM **)items);
 
-	// create menu window
-	menu_win = newwin(LINES - 1, COLS - 1, 0, 0);
-	keypad(menu_win, TRUE);
+	// sets border and size of windows
+	set_size_menu_window(menu, &windows);
+	windows.at(PATTERN_WINDOW) = newwin(1, COLS, LINES - 1, 0);
 
-	// set main and sub window
-	set_menu_win(menu, menu_win);
-	set_menu_sub(menu, derwin(menu_win, LINES - 3, COLS - 2, 1, 1));
-	set_menu_format(menu, LINES - 3, 1);
-
-
-	// print a border and set mark_length
-	box(menu_win, 0, 0);
-	set_menu_mark(menu, "   ");
-
-	// post menu
-	post_menu(menu);
-	set_mark_fore(menu);
-	refresh();
-
-	wrefresh(menu_win);
+	// sets color and mark of current item
+	set_mark_color(menu);
 	refresh();
 
 	// navigation
-	navigation(menu, menu_win, vault);
+	navigation(menu, &windows, vault);
 
 	// unpost and free all the memory taken up
 	unpost_menu(menu);
 	free_menu(menu);
 	for (size_t i = 0; i < vault->count_entries; i++)
 		free_item(items[i]);
+	free(items);
+
+	delwin(windows.at(MENU_WINDOW));
+	delwin(windows.at(PATTERN_WINDOW));
+	delwin(windows.at(MENU_SUB_WINDOW));
 	endwin();
 }

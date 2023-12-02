@@ -1,6 +1,6 @@
 #include "pattern_matching.h"
 
-std::vector<ITEM *> start_pattern_matching(MENU *menu, WINDOW *menu_win, std::vector<std::string> real_paths) {
+std::vector<ITEM *> start_pattern_matching(MENU *menu, std::vector<WINDOW *> *windows, std::vector<std::string> real_paths) {
 	// result of method
 	std::vector<ITEM *> matched_items;
 
@@ -15,12 +15,12 @@ std::vector<ITEM *> start_pattern_matching(MENU *menu, WINDOW *menu_win, std::ve
 
 	// frees last line, if it wasn't
 	for (int i = COLS - 1; i >= 0; i--) {
-		mvdelch(LINES - 1, i);
+		mvwdelch(windows->at(PATTERN_WINDOW), 0, i);
 	}
 
 	// moves to last line and prints a '/'
-	move(LINES - 1, 0);
-	addch('/');
+	mvwaddch(windows->at(PATTERN_WINDOW), 0, 0, '/');
+	wrefresh(windows->at(PATTERN_WINDOW));
 
 	// set the cursor visible and start tracking the x position of cursor
 	curs_set(1);
@@ -29,16 +29,27 @@ std::vector<ITEM *> start_pattern_matching(MENU *menu, WINDOW *menu_win, std::ve
 	while (true) {
 		c = getch();
 		switch (c) {
+		case KEY_RESIZE:
+			// unpost menu and post it to a new window with new specs
+			unpost_menu(menu);
+			set_size_menu_window(menu, windows);
+
+			// move the pattern window to right position
+			mvwin(windows->at(PATTERN_WINDOW), LINES - 1, 0);
+			wmove(windows->at(PATTERN_WINDOW), 0, x_pos);
+
+			break;
+
 		// delete a key
 		case KEY_BACKSPACE:
 			// if its the first position, exit pattern mode
 			if (x_pos == 1) {
-				mvdelch(LINES - 1, 0);
+				mvwdelch(windows->at(PATTERN_WINDOW), 0, 0);
 				return matched_items;
 			}
 
 			// if an additional pattern was deleted, delete the vector variable
-			if (mvinch(LINES - 1, x_pos - 1) == ' ') {
+			if (mvwinch(windows->at(PATTERN_WINDOW), 0, x_pos - 1) == ' ') {
 				pattern_matching_buffer.pop_back();
 			}
 
@@ -48,20 +59,21 @@ std::vector<ITEM *> start_pattern_matching(MENU *menu, WINDOW *menu_win, std::ve
 			}
 
 			// delete the character from the screen
-			mvdelch(LINES - 1, --x_pos);
+			mvwdelch(windows->at(PATTERN_WINDOW), 0, --x_pos);
 			break;
 
 		// Escape
 		case 27:
 			// delete whole last line and go back to the selected item before the pattern_matching
 			for (int i = x_pos - 1; i >= 0; i--) {
-				mvdelch(LINES - 1, i);
+				mvwdelch(windows->at(PATTERN_WINDOW), 0, i);
 			}
 			set_current_item(menu, cur_item);
 			return std::vector<ITEM *>();
 
 		// Enter
 		case '\n':
+			wrefresh(windows->at(PATTERN_WINDOW));
 			return matched_items;
 
 		default:
@@ -78,7 +90,7 @@ std::vector<ITEM *> start_pattern_matching(MENU *menu, WINDOW *menu_win, std::ve
 				}
 
 				// print the character to the screen
-				mvaddch(LINES - 1, x_pos++, c);
+				mvwaddch(windows->at(PATTERN_WINDOW), 0, x_pos++, c);
 				break;
 			}
 		}
@@ -86,9 +98,18 @@ std::vector<ITEM *> start_pattern_matching(MENU *menu, WINDOW *menu_win, std::ve
 		// search for the pattern
 		matched_items = search_menu_pattern(menu, pattern_matching_buffer, real_paths);
 
-		// refresh the window
-		wrefresh(menu_win);
-		refresh();
+		// go to the first item of the vector
+		if (matched_items.size() > 0) {
+			set_current_item(menu, matched_items.at(0));
+		}
+		else {
+			set_current_item(menu, cur_item);
+		}
+		set_mark_color(menu);
+
+		// refresh the windows
+		wrefresh(windows->at(MENU_WINDOW));
+		wrefresh(windows->at(PATTERN_WINDOW));
 	}
 }
 
@@ -111,23 +132,5 @@ std::vector<ITEM *> search_menu_pattern(MENU *menu, std::vector<std::string> pat
 			vec.push_back(items[i]);
 	}
 
-	// go to the first item of the vector
-	if (vec.size() > 0) {
-		set_current_item(menu, vec.at(0));
-		set_mark_fore(menu);
-	}
-
 	return vec;
-}
-
-void set_mark_fore(MENU *menu) {
-	std::string current_item_name(item_name(current_item(menu)));
-	if (current_item_name.find('/') != std::string::npos) {
-		set_menu_mark(menu, "   ");
-		set_menu_fore(menu, COLOR_PAIR(2));
-	}
-	else {
-		set_menu_mark(menu, " * ");
-		set_menu_fore(menu, COLOR_PAIR(1));
-	}
 }
