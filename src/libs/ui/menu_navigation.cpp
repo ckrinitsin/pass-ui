@@ -1,12 +1,14 @@
-#include "menu_navigation.h"
+#include "pop_ups.h"
+#include <menu.h>
+#include <ncurses.h>
 
 void navigation(MENU *menu, std::vector<WINDOW *> *windows, struct vault *vault) {
-	// for some operations (like RESIZE), we need to save the current item to restore it later
-	ITEM *cur_item;
-
 	// vector which stores all items, which are matched with the pattern, index for navigating through them
 	std::vector<ITEM *> pattern_vector;
 	size_t pattern_index = 0;
+
+    // saves the output of various commands
+    std::vector<std::string> output;
 
 	// input char
 	int c;
@@ -18,19 +20,8 @@ void navigation(MENU *menu, std::vector<WINDOW *> *windows, struct vault *vault)
 		switch (c) {
 		// called when the window is resized
 		case KEY_RESIZE:
-
-			// save the current item, to restore it later
-			cur_item = current_item(menu);
-
 			// unpost menu and post it to a new window with new specs
-			unpost_menu(menu);
-			set_size_menu_window(menu, windows);
-
-			// move the pattern window accordingly to new window
-			mvwin(windows->at(PATTERN_WINDOW), LINES - 1, 0);
-
-			// restore current item
-			set_current_item(menu, cur_item);
+			set_size_menu_window(menu, windows, current_item(menu));
 
 			break;
 
@@ -94,6 +85,18 @@ void navigation(MENU *menu, std::vector<WINDOW *> *windows, struct vault *vault)
 			pattern_index = 0;
 			curs_set(0);
 			break;
+
+        // show entry information
+        case '\n':
+            // if the item is not a directory, but a password file, get the information into a vector
+            if (vault->entry.at(item_index(current_item(menu))).find("/") != std::string::npos) break;
+            get_pass_information(&output, vault->api_entry.at(item_index(current_item(menu))));
+
+            // create a username_password pop up
+            username_password_pop_up(windows, output, vault->api_entry.at(item_index(current_item(menu))), menu);
+
+            // clear the vector
+            output.clear();
 		}
 
 		// reset 'g' input
@@ -101,7 +104,7 @@ void navigation(MENU *menu, std::vector<WINDOW *> *windows, struct vault *vault)
 			g = false;
 
 		// if the cursor is on a directory, change the color and remove the mark
-		set_mark_color(menu);
+		set_color(menu);
 
 		// refresh window
 		wrefresh(windows->at(MENU_WINDOW));

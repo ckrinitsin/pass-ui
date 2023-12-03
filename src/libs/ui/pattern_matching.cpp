@@ -31,11 +31,9 @@ std::vector<ITEM *> start_pattern_matching(MENU *menu, std::vector<WINDOW *> *wi
 		switch (c) {
 		case KEY_RESIZE:
 			// unpost menu and post it to a new window with new specs
-			unpost_menu(menu);
-			set_size_menu_window(menu, windows);
+			set_size_menu_window(menu, windows, NULL);
 
 			// move the pattern window to right position
-			mvwin(windows->at(PATTERN_WINDOW), LINES - 1, 0);
 			wmove(windows->at(PATTERN_WINDOW), 0, x_pos);
 
 			break;
@@ -105,7 +103,7 @@ std::vector<ITEM *> start_pattern_matching(MENU *menu, std::vector<WINDOW *> *wi
 		else {
 			set_current_item(menu, cur_item);
 		}
-		set_mark_color(menu);
+		set_color(menu);
 
 		// refresh the windows
 		wrefresh(windows->at(MENU_WINDOW));

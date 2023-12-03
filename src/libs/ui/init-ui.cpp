@@ -1,9 +1,9 @@
 #include "init-ui.h"
+#include <menu.h>
 
-void init_ui(struct vault *vault) {
-	ITEM **items;
+void init_ui(struct vault *vault) { ITEM **items;
 	MENU *menu;
-	std::vector<WINDOW *> windows(4, NULL);
+	std::vector<WINDOW *> windows(6, NULL);
 
 	// initialize
 	initscr();
@@ -48,11 +48,11 @@ void init_ui(struct vault *vault) {
 	menu = new_menu((ITEM **)items);
 
 	// sets border and size of windows
-	set_size_menu_window(menu, &windows);
+	set_size_menu_window(menu, &windows, NULL);
 	windows.at(PATTERN_WINDOW) = newwin(1, COLS, LINES - 1, 0);
 
 	// sets color and mark of current item
-	set_mark_color(menu);
+	set_color(menu);
 	refresh();
 
 	// navigation

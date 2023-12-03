@@ -7,9 +7,6 @@
 #include <string.h>
 #include <vector>
 
-// Defines the max length of a directory name
-#define max_path_size 512
-
 // Returns the path to the password vault
 std::string load_vault_path();
 

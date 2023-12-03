@@ -40,3 +40,8 @@ FILE *countscript(std::string arg) {
 	std::string command = "cd " + arg + "\nfind . -type f ! -name '*.gpg' | tree -i -f | head -n -2 | tail -n +2 | wc -l";
 	return get_command_pipe(command);
 }
+
+FILE *get_password_script(std::string arg) {
+    std::string command = "pass " + arg;
+    return get_command_pipe(command);
+}
