@@ -1,29 +1,10 @@
 #include "init-ui.h"
 #include <menu.h>
 
-void init_ui(struct vault *vault) { ITEM **items;
+int init_ui(struct vault *vault, int index) { 
+    ITEM **items;
 	MENU *menu;
-	std::vector<WINDOW *> windows(6, NULL);
-
-	// initialize
-	initscr();
-
-	// start color mode and preserve standard background
-	start_color();
-	use_default_colors();
-
-	cbreak();
-	keypad(stdscr, TRUE);
-
-	// don't print inputs and make the cursor invisible
-	noecho();
-	curs_set(0);
-
-	// initialize colors
-	init_color_pairs();
-
-	// set delay after escape to 0
-	set_escdelay(0);
+	std::vector<WINDOW *> windows(20, NULL); //CHANGE THAT
 
 	// initializes items
 	items = (ITEM **)malloc((vault->count_entries + 1) * sizeof(ITEM *));
@@ -55,8 +36,11 @@ void init_ui(struct vault *vault) { ITEM **items;
 	set_color(menu);
 	refresh();
 
+    // goes 'back' to current item
+    set_current_item(menu, items[index]);
+
 	// navigation
-	navigation(menu, &windows, vault);
+	int result = navigation(menu, &windows, vault);
 
 	// unpost and free all the memory taken up
 	unpost_menu(menu);
@@ -68,5 +52,6 @@ void init_ui(struct vault *vault) { ITEM **items;
 	delwin(windows.at(MENU_WINDOW));
 	delwin(windows.at(PATTERN_WINDOW));
 	delwin(windows.at(MENU_SUB_WINDOW));
-	endwin();
+
+    return result;
 }

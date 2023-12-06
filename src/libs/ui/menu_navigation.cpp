@@ -1,14 +1,12 @@
-#include "pop_ups.h"
-#include <menu.h>
-#include <ncurses.h>
+#include "menu_navigation.h"
 
-void navigation(MENU *menu, std::vector<WINDOW *> *windows, struct vault *vault) {
+int navigation(MENU *menu, std::vector<WINDOW *> *windows, struct vault *vault) {
 	// vector which stores all items, which are matched with the pattern, index for navigating through them
 	std::vector<ITEM *> pattern_vector;
 	size_t pattern_index = 0;
 
-    // saves the output of various commands
-    std::vector<std::string> output;
+	// saves the output of various commands
+	std::vector<std::string> output;
 
 	// input char
 	int c;
@@ -86,17 +84,42 @@ void navigation(MENU *menu, std::vector<WINDOW *> *windows, struct vault *vault)
 			curs_set(0);
 			break;
 
-        // show entry information
-        case '\n':
-            // if the item is not a directory, but a password file, get the information into a vector
-            if (vault->entry.at(item_index(current_item(menu))).find("/") != std::string::npos) break;
-            get_pass_information(&output, vault->api_entry.at(item_index(current_item(menu))));
+		// show entry information
+		case '\n':
+			// remove message at bottom bar
+			delete_message(windows);
 
-            // create a username_password pop up
-            username_password_pop_up(windows, output, vault->api_entry.at(item_index(current_item(menu))), menu);
+			// if the item is not a directory, but a password file, get the information into a vector
+			if (vault->entry.at(item_index(current_item(menu))).find("/") != std::string::npos)
+				break;
+			get_pass_information(&output, vault->api_entry.at(item_index(current_item(menu))));
 
-            // clear the vector
-            output.clear();
+			// create a username_password pop up
+			username_password_pop_up(windows, output, vault->api_entry.at(item_index(current_item(menu))), menu);
+
+			// clear the vector
+			output.clear();
+			break;
+
+		case 'c':
+			// check if item is directory, if not copy to clipboard and confirm with a message
+			if (vault->entry.at(item_index(current_item(menu))).find("/") != std::string::npos)
+				break;
+			copy_to_clipboard(vault->api_entry.at(item_index(current_item(menu))));
+			print_message(windows, "Password copied to clipboard for 45 seconds");
+			break;
+		case 'd':
+            // Text is different whether it's a directory or not
+			std::string prompt = "Sure you want to delete the entry?\nYou cannot undo that (y/n)";
+			if (vault->entry.at(item_index(current_item(menu))).find("/") != std::string::npos)
+				prompt = "Sure you want to delete the directory?\nDeletes all entries inside this directory.\nYou cannot undo that (y/n)";
+
+            // start confirmation prompt and execute command, if confirmed
+			if (centered_confirm_prompt(windows, CONFIRM_PROMPT_WINDOW, prompt, BORDER_COLOR)) {
+				delete_entry(vault->api_entry.at(item_index(current_item(menu))));
+				return item_index(current_item(menu));
+			}
+			break;
 		}
 
 		// reset 'g' input
@@ -111,4 +134,6 @@ void navigation(MENU *menu, std::vector<WINDOW *> *windows, struct vault *vault)
 		wrefresh(windows->at(PATTERN_WINDOW));
 		refresh();
 	}
+
+	return -1;
 }

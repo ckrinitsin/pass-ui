@@ -29,3 +29,15 @@ void get_pass_information(std::vector<std::string> *information, std::string arg
 		exit(-1);
 	}
 }
+
+bool copy_to_clipboard(std::string argument) {
+    // usage of system without shell-script.c because of simple shell command, return is not needed
+    std::string command = "pass --clip " + argument + " > /dev/null 2>&1";
+    return system(command.c_str()) > 0;
+}
+
+bool delete_entry(std::string argument) {
+    // usage of system without shell-script.c because of simple shell command, return is not needed
+    std::string command = "pass rm -f -r " + argument + " > /dev/null 2>&1";
+    return system(command.c_str()) > 0;
+}

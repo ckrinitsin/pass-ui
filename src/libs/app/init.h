@@ -1,4 +1,5 @@
 #include "../utils/shell-scripts.h"
+#include "../ui/init-ui.h"
 
 #include <filesystem>
 #include <fstream>
@@ -6,6 +7,8 @@
 #include <string>
 #include <string.h>
 #include <vector>
+
+int init();
 
 // Returns the path to the password vault
 std::string load_vault_path();

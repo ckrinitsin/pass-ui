@@ -1,5 +1,47 @@
 #include "init.h"
 
+int init() {
+    int result = 0;
+
+    // initialize
+    initscr();
+
+    // start color mode and preserve standard background
+    start_color();
+    use_default_colors();
+
+    cbreak();
+    keypad(stdscr, TRUE);
+
+    // don't print inputs and make the cursor invisible
+    noecho();
+    curs_set(0);
+
+    // initialize colors
+    init_color_pairs();
+
+    // set delay after escape to 0
+    set_escdelay(0);
+
+    while (result >= 0) {
+
+        // Loads the password-store path
+        std::string vault_dir = load_vault_path();
+
+        size_t count = get_number_entries(vault_dir);
+
+        // Gets a string array, with all entries
+        std::vector<std::string> entries = get_all_entries(vault_dir, count, false);
+        std::vector<std::string> entries_api = get_all_entries(vault_dir, count, true);
+
+        struct vault vault = {.count_entries = count, .vault_dir = vault_dir, .api_entry = entries_api, .entry = entries};
+        result = init_ui(&vault, result);
+    }
+
+	endwin();
+	return 0;
+}
+
 std::string load_vault_path() {
 	std::string vault_name{"vault-dir.txt"};
 

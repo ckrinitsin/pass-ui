@@ -41,10 +41,10 @@ void create_pop_up(std::vector<WINDOW *> *windows, std::vector<std::string> info
 	x_border -= width_border / 2;
 
     // print the three boxes
-	print_box_with_title(windows, BORDER_WINDOW, y_border, x_border, width_border, height_border, entry, "", BORDER_COLOR);
+	print_box_with_title(windows, BORDER_WINDOW, y_border, x_border, width_border, height_border, entry, "", false, BORDER_COLOR);
 	if (information.size() > 1)
-		print_box_with_title(windows, USERNAME_WINDOW, y, x, width, height, "Username:", information.at(1), -1);
-	print_box_with_title(windows, PASSWORD_WINDOW, y + 4, x, width, height, "Password:", information.at(0), -1);
+		print_box_with_title(windows, USERNAME_WINDOW, y, x, width, height, "Username:", information.at(1), false, -1);
+	print_box_with_title(windows, PASSWORD_WINDOW, y + 4, x, width, height, "Password:", information.at(0), false, -1);
 }
 
 void username_password_pop_up(std::vector<WINDOW *> *windows, std::vector<std::string> information, std::string entry, MENU *menu) {
