@@ -1,4 +1,5 @@
 #include "init.h"
+#include <iostream>
 
 int init() {
     int result = 0;

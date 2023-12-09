@@ -1,5 +1,4 @@
 #include "design.h"
-#include <ncurses.h>
 
 // saves message to make it accessible accross methods
 std::string pattern_message;
@@ -26,17 +25,17 @@ void set_size_menu_window(MENU *menu, std::vector<WINDOW *> *windows, ITEM *item
 	delwin(windows->at(MENU_WINDOW));
 
 	// create menu window
-	WINDOW *menu_win = newwin(LINES - 1, COLS, 0, 0);
-	WINDOW *menu_sub_win = derwin(menu_win, LINES - 3, COLS - 1, 1, 1);
+	WINDOW *menu_win = newwin(LINES - 2, COLS, 1, 0);
+	WINDOW *menu_sub_win = derwin(menu_win, LINES - 4, COLS - 1, 1, 1);
 	keypad(menu_win, TRUE);
 
 	// set main and sub window
 	set_menu_win(menu, menu_win);
 	set_menu_sub(menu, menu_sub_win);
-	set_menu_format(menu, LINES - 3, 1);
+	set_menu_format(menu, LINES - 4, 1);
 
 	// print a border and set mark_length
-	set_menu_mark(menu, " * ");
+	set_menu_mark(menu, " - ");
 	box(menu_win, 0, 0);
 
 	// post menu
@@ -80,27 +79,28 @@ void print_box_with_title(std::vector<WINDOW *> *windows, int window_index, size
 	windows->at(window_index) = win;
 }
 
-bool centered_confirm_prompt(std::vector<WINDOW *> *windows, int window_index, std::string value, int color) {
-    // create an array where each line is an element
-    size_t pos;
-    std::string copy(value);
-    std::vector<std::string> lines;
-    while ((pos = copy.find('\n')) != std::string::npos) {
-        lines.push_back(copy.substr(0, pos));
-        copy.erase(0, pos + 1);
-    }
-    lines.push_back(copy);
+bool centered_confirm_prompt(MENU *menu, std::vector<WINDOW *> *windows, int window_index, std::string value, int color, bool text_centered) {
+	// create an array where each line is an element
+	size_t pos;
+	std::string copy(value);
+	std::vector<std::string> lines;
+	while ((pos = copy.find('\n')) != std::string::npos) {
+		lines.push_back(copy.substr(0, pos));
+		copy.erase(0, pos + 1);
+	}
+	lines.push_back(copy);
 
-    // initialize height with 'room' for the box
+	// initialize height with 'room' for the box
 	size_t height = lines.size() + 2;
 
-    // get max width
-    size_t width = 0;
-    for (std::string s : lines) {
-        if (s.size() > width) width = s.size();
-    }
+	// get max width
+	size_t width = 0;
+	for (std::string s : lines) {
+		if (s.size() > width)
+			width = s.size();
+	}
 
-    // padding
+	// padding
     width += 4;
 
 	// initialize window
@@ -111,9 +111,13 @@ bool centered_confirm_prompt(std::vector<WINDOW *> *windows, int window_index, s
 	if (color != -1)
 		wattron(win, COLOR_PAIR(color));
 	box(win, 0, 0);
-    for (size_t i = 0; i < lines.size(); i++) {
-        mvwprintw(win, i+1, (width/2) - (lines.at(i).size()/2), "%s", lines.at(i).c_str());
-    }
+	for (size_t i = 0; i < lines.size(); i++) {
+		if (text_centered) {
+            mvwprintw(win, i + 1, (width / 2) - (lines.at(i).size() / 2), "%s", lines.at(i).c_str());
+        } else {
+            mvwprintw(win, i + 1, 2, "%s", lines.at(i).c_str());
+        }
+	}
 	if (color != -1)
 		wattroff(win, COLOR_PAIR(color));
 
@@ -122,11 +126,16 @@ bool centered_confirm_prompt(std::vector<WINDOW *> *windows, int window_index, s
 	refresh();
 	windows->at(window_index) = win;
 
-    // only react if n, y or q was pressed
+	// only react if n, y or q was pressed
 	int c;
 	while (true) {
 		c = getch();
-		if (c == 'n' || c == 'y' || c == 'q')
+		if (c == KEY_RESIZE) {
+            mvwin(win, (LINES / 2) - (height / 2), (COLS / 2) - (width / 2));
+			set_size_menu_window(menu, windows, current_item(menu));
+            wrefresh(win);
+        }
+		else if (c == 'n' || c == 'y' || c == 'q')
 			break;
 	}
 
@@ -135,7 +144,8 @@ bool centered_confirm_prompt(std::vector<WINDOW *> *windows, int window_index, s
 }
 
 void print_message(std::vector<WINDOW *> *windows, std::string message) {
-	// inititlailze window
+    if (windows->at(MESSAGE_WINDOW)) remove_window(windows, MESSAGE_WINDOW);
+	// initialize window
 	windows->at(MESSAGE_WINDOW) = newwin(1, message.length(), LINES - 1, (COLS / 2) - (message.length() / 2));
 
 	// print message in color

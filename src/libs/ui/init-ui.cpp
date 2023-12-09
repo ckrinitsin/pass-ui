@@ -1,8 +1,8 @@
 #include "init-ui.h"
 #include <menu.h>
 
-int init_ui(struct vault *vault, int index) { 
-    ITEM **items;
+int init_ui(struct vault *vault, int index) {
+	ITEM **items;
 	MENU *menu;
 	std::vector<WINDOW *> windows(20, NULL); //CHANGE THAT
 
@@ -15,7 +15,7 @@ int init_ui(struct vault *vault, int index) {
 
 	// create items
 	for (size_t i = 0; i < vault->count_entries; i++) {
-		if (i < vault->count_entries - 1 && (vault->api_entry[i + 1]).find(vault->api_entry[i]) != std::string::npos) {
+		if (i < vault->count_entries - 1 && vault->api_entry[i + 1].find(vault->api_entry[i]) != std::string::npos && (vault->api_entry[i + 1].find('/') != std::string::npos)) {
 			// if this item is a directory
 			vault->entry[i] += "/";
 		}
@@ -32,12 +32,12 @@ int init_ui(struct vault *vault, int index) {
 	set_size_menu_window(menu, &windows, NULL);
 	windows.at(PATTERN_WINDOW) = newwin(1, COLS, LINES - 1, 0);
 
+	// goes 'back' to current item
+	set_current_item(menu, items[index]);
+
 	// sets color and mark of current item
 	set_color(menu);
 	refresh();
-
-    // goes 'back' to current item
-    set_current_item(menu, items[index]);
 
 	// navigation
 	int result = navigation(menu, &windows, vault);
@@ -53,5 +53,5 @@ int init_ui(struct vault *vault, int index) {
 	delwin(windows.at(PATTERN_WINDOW));
 	delwin(windows.at(MENU_SUB_WINDOW));
 
-    return result;
+	return result;
 }

@@ -11,9 +11,10 @@
 #define MENU_SUB_WINDOW 2
 #define USERNAME_WINDOW 3
 #define PASSWORD_WINDOW 4
-#define BORDER_WINDOW 5
-#define MESSAGE_WINDOW 6
-#define CONFIRM_PROMPT_WINDOW 7
+#define TITLE_WINDOW 5
+#define BORDER_WINDOW 6
+#define MESSAGE_WINDOW 7
+#define CONFIRM_PROMPT_WINDOW 8
 
 // DEFINE COLOR MACROS
 #define DIR_COLOR 0
@@ -27,7 +28,7 @@ void set_color(MENU *menu);
 void set_size_menu_window(MENU* menu, std::vector<WINDOW*> *windows, ITEM* item);
 
 void print_box_with_title(std::vector<WINDOW*> *windows, int window_index, size_t y, size_t x, size_t width, size_t height, std::string title, std::string value, bool centered, int color);
-bool centered_confirm_prompt(std::vector<WINDOW*> *windows, int window_index, std::string value, int color);
+bool centered_confirm_prompt(MENU *menu, std::vector<WINDOW*> *windows, int window_index, std::string value, int color, bool text_centered);
 
 void print_message(std::vector<WINDOW*> *windows, std::string message);
 void delete_message(std::vector<WINDOW*> *windows);

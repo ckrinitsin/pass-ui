@@ -1,4 +1,4 @@
-#include "pop_ups.h"
+#include "display.h"
 
 #define XPADDING 10
 
@@ -47,7 +47,7 @@ void create_pop_up(std::vector<WINDOW *> *windows, std::vector<std::string> info
 	print_box_with_title(windows, PASSWORD_WINDOW, y + 4, x, width, height, "Password:", information.at(0), false, -1);
 }
 
-void username_password_pop_up(std::vector<WINDOW *> *windows, std::vector<std::string> information, std::string entry, MENU *menu) {
+void username_password_display(std::vector<WINDOW *> *windows, std::vector<std::string> information, std::string entry, MENU *menu) {
 	// input char
 	int c;
 
@@ -77,8 +77,4 @@ void username_password_pop_up(std::vector<WINDOW *> *windows, std::vector<std::s
 	remove_window(windows, BORDER_WINDOW);
 	if (windows->at(USERNAME_WINDOW))
 		remove_window(windows, USERNAME_WINDOW);
-
-    wrefresh(windows->at(MENU_WINDOW));
-    wrefresh(windows->at(PATTERN_WINDOW));
-    refresh();
 }

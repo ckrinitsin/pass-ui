@@ -8,3 +8,7 @@ void get_pass_information(std::vector<std::string> *information, std::string arg
 bool copy_to_clipboard(std::string argument);
 
 bool delete_entry(std::string argument);
+
+bool edit_password(std::string argument);
+
+bool rename_password(std::string argument1, std::string argument2);
