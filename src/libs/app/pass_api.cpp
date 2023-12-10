@@ -2,13 +2,13 @@
 
 void get_pass_information(std::vector<std::string> *information, std::string argument) {
 	// open a pipe to the command and count the number of entries
-	FILE *pipe = get_password_script("'" + argument + "'");
+	FILE *pipe = get_password_script(argument);
 
 	char buffer[max_path_size];
 
 	// tries to read the pipe, storing the filename into the vector
     for (int i = 0; i < 2; i++) {
-        if (fgets(buffer, max_path_size, pipe) == NULL) break;
+        if (fgets(buffer, max_path_size, pipe) == NULL) return;
 
         *(buffer + strlen(buffer) - 1) = '\0';
         information->push_back(buffer);
@@ -32,8 +32,22 @@ void get_pass_information(std::vector<std::string> *information, std::string arg
 
 bool copy_to_clipboard(std::string argument) {
     // usage of system without shell-script.c because of simple shell command, return is not needed
-    std::string command = "pass --clip '" + argument + "' > /dev/null 2>&1";
-    return system(command.c_str()) > 0;
+    std::string command = "pass --clip '" + argument + "' 2>&1 | grep -q -v 'gpg: ' && echo 1";
+
+    FILE *pipe = get_command_pipe(command);
+
+    char buffer[max_path_size];
+    if (fgets(buffer, max_path_size, pipe) == NULL) return false;
+
+	// close the pipe
+	if (pclose(pipe) == -1) {
+		perror("pclose failed\n");
+		exit(-1);
+	}
+
+    if (*buffer == '1') return true;
+
+    return false;
 }
 
 bool delete_entry(std::string argument) {

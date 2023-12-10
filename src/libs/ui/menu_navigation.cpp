@@ -104,6 +104,8 @@ int navigation(MENU *menu, std::vector<WINDOW *> *windows, struct vault *vault) 
 				break;
 			get_pass_information(&output, vault->api_entry.at(item_index(current_item(menu))));
 
+            if (output.size() == 0) break;
+
 			// create a username_password pop up
 			username_password_display(windows, output, vault->api_entry.at(item_index(current_item(menu))), menu);
 
@@ -116,8 +118,11 @@ int navigation(MENU *menu, std::vector<WINDOW *> *windows, struct vault *vault) 
 			// check if item is directory, if not copy to clipboard and confirm with a message
 			if (vault->entry.at(item_index(current_item(menu))).find("/") != std::string::npos)
 				break;
-			copy_to_clipboard(vault->api_entry.at(item_index(current_item(menu))));
-			print_message(windows, "Password copied to clipboard for 45 seconds");
+			if (copy_to_clipboard(vault->api_entry.at(item_index(current_item(menu))))){
+                print_message(windows, "Password copied to clipboard for 45 seconds");
+            } else {
+                print_message(windows, "Password is not copied to clipboard");
+            }
 			break;
 
 		// delete an entry
