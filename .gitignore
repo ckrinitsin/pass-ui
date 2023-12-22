@@ -3,4 +3,5 @@ main
 vault-dir.txt
 debug
 .clang-format
+expect.txt
 vgcore.*
