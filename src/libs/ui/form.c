@@ -1,4 +1,5 @@
 #include "form.h"
+#include <string.h>
 
 char *trim_whitespaces(char *str) {
 	char *end;
@@ -22,18 +23,18 @@ char *trim_whitespaces(char *str) {
 	return str;
 }
 
-std::string rename(std::vector<WINDOW *> *windows, MENU* menu, std::string value) {
+char *rename_form(WINDOW *windows[], MENU* menu, char *value) {
     // make cursor visible
     curs_set(1);
 
     // declare the field, and properties of the field
-	int width = (36 < value.size()) ? value.size()+4 : 40;
+	int width = (36 < strlen(value)) ? strlen(value)+4 : 40;
 	int height = 1;
 	FIELD *field[2] = { new_field(height, width, 0, 0, 0, 0), NULL };
 
     // remove the '/' from the string and set opts and buffer of the field
-    if (value.back() == '/') value.pop_back();
-    set_field_buffer(field[0], 0, value.c_str());
+    if (value[strlen(value) - 1] == '/') value[strlen(value) - 1] = '\0';
+    set_field_buffer(field[0], 0, value);
 	set_field_opts(field[0], O_VISIBLE | O_PUBLIC | O_EDIT | O_ACTIVE);
 
     // update the width and height
@@ -45,26 +46,26 @@ std::string rename(std::vector<WINDOW *> *windows, MENU* menu, std::string value
 	print_box_with_title(windows, TITLE_WINDOW, (LINES / 2) - (height / 2), (COLS / 2) - (width / 2), width, height, "Rename to:", "", false, -1);
 
     // set the windows and post form
-	set_form_win(form, windows->at(TITLE_WINDOW));
-	set_form_sub(form, derwin(windows->at(TITLE_WINDOW), height - 2, width - 2, 1, 1));
+	set_form_win(form, windows[TITLE_WINDOW]);
+	set_form_sub(form, derwin(windows[TITLE_WINDOW], height - 2, width - 2, 1, 1));
     post_form(form);
 
     // put your cursor to the last char and refresh the windows
     form_driver(form, REQ_END_LINE);
     refresh();
-    wrefresh(windows->at(TITLE_WINDOW));
+    wrefresh(windows[TITLE_WINDOW]);
 
     int c;
 
-    std::string result;
+    char *result;
 
-    while ((c = wgetch(windows->at(MENU_WINDOW))) != 27) {
+    while ((c = wgetch(windows[MENU_WINDOW])) != 27) {
         switch(c) {
         case KEY_RESIZE:
             // move the input window and update everything else
-            mvwin(windows->at(TITLE_WINDOW), (LINES / 2) - (height / 2), (COLS / 2) - (width / 2));
+            mvwin(windows[TITLE_WINDOW], (LINES / 2) - (height / 2), (COLS / 2) - (width / 2));
 			set_size_menu_window(menu, windows, current_item(menu));
-            wrefresh(windows->at(TITLE_WINDOW));
+            wrefresh(windows[TITLE_WINDOW]);
             break;
         case '\n':
 			// or the current field buffer won't be sync with what is displayed
@@ -80,10 +81,10 @@ std::string rename(std::vector<WINDOW *> *windows, MENU* menu, std::string value
             unpost_form(form);
             free_form(form);
             free_field(field[0]);
-            remove_window(windows, TITLE_WINDOW);
+            remove_window_index(windows, TITLE_WINDOW);
 
             // if the end char is a '/', the string is invalid
-            if (result.back() == '/') 
+            if (result[strlen(result) - 1] == '/') 
                 return "/";
 
             return result;
@@ -116,7 +117,7 @@ std::string rename(std::vector<WINDOW *> *windows, MENU* menu, std::string value
         }
 
         // refresh the window to display the change
-        wrefresh(windows->at(TITLE_WINDOW));
+        wrefresh(windows[TITLE_WINDOW]);
     }
 
     // reset everything to go back to menu navigation
@@ -124,6 +125,6 @@ std::string rename(std::vector<WINDOW *> *windows, MENU* menu, std::string value
     unpost_form(form);
     free_form(form);
     free_field(field[0]);
-    remove_window(windows, TITLE_WINDOW);
+    remove_window_index(windows, TITLE_WINDOW);
     return "";
 }

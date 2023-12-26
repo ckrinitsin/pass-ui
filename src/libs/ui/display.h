@@ -1,3 +1,3 @@
 #include "pattern_matching.h"
 
-void username_password_display(std::vector<WINDOW*> *windows, std::vector<std::string> information, std::string entry, MENU* menu);
+void username_password_display(WINDOW *windows[], linked_list *information, char *entry, MENU* menu);

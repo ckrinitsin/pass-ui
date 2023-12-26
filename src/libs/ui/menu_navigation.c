@@ -1,6 +1,6 @@
 #include "menu_navigation.h"
 
-std::string help_msg = "e               edit your password using nano\n"
+char *help_msg = "e               edit your password using nano\n"
 					   "c               copy your password in clipboard\n"
 					   "R               refresh the list\n"
 					   "r               rename the password or directory\n"
@@ -8,13 +8,13 @@ std::string help_msg = "e               edit your password using nano\n"
 					   "ENTER           show your password information";
 
 
-int navigation(MENU *menu, std::vector<WINDOW *> *windows, struct vault *vault) {
+int navigation(MENU *menu, WINDOW *windows[], struct vault *vault) {
 	// vector which stores all items, which are matched with the pattern, index for navigating through them
-	std::vector<ITEM *> pattern_vector;
+	linked_list *pattern_vector = NULL;
 	size_t pattern_index = 0;
 
 	// saves the output of various commands
-	std::vector<std::string> output;
+	linked_list *output = NULL;
 
 	// input char
 	int c;
@@ -22,9 +22,9 @@ int navigation(MENU *menu, std::vector<WINDOW *> *windows, struct vault *vault) 
 	// checker for double g
 	bool g = false;
 
-	std::string prompt;
+	char *prompt;
 
-	while ((c = wgetch(windows->at(MENU_WINDOW))) != 'q') {
+	while ((c = wgetch(windows[MENU_WINDOW])) != 'q') {
 		switch (c) {
 		// called when the window is resized
 		case KEY_RESIZE:
@@ -73,17 +73,17 @@ int navigation(MENU *menu, std::vector<WINDOW *> *windows, struct vault *vault) 
 
 		// get next entry of matched pattern
 		case 'n':
-			if (pattern_vector.size() > 1) {
-				pattern_index = (pattern_index == pattern_vector.size() - 1) ? 0 : pattern_index + 1;
-				set_current_item(menu, pattern_vector.at(pattern_index));
+			if (size(pattern_vector) > 1) { /// TODO: dont need that?
+				pattern_index = (pattern_index == size(pattern_vector) - 1) ? 0 : pattern_index + 1;
+				set_current_item(menu, value_at(pattern_vector, pattern_index));
 			}
 			break;
 
 		// get previous entry of matched pattern
 		case 'N':
-			if (pattern_vector.size() > 1) {
-				pattern_index = (pattern_index == 0) ? pattern_vector.size() - 1 : pattern_index - 1;
-				set_current_item(menu, pattern_vector.at(pattern_index));
+			if (size(pattern_vector) > 1) { /// TODO: dont need that?
+				pattern_index = (pattern_index == 0) ? size(pattern_vector) - 1 : pattern_index - 1;
+				set_current_item(menu, value_at(pattern_vector, pattern_index));
 			}
 			break;
 
@@ -100,25 +100,25 @@ int navigation(MENU *menu, std::vector<WINDOW *> *windows, struct vault *vault) 
 			delete_message(windows);
 
 			// if the item is not a directory, but a password file, get the information into a vector
-			if (vault->entry.at(item_index(current_item(menu))).find("/") != std::string::npos)
+			if (strstr(value_at(vault->entry, item_index(current_item(menu))), "/") != NULL)
 				break;
-			get_pass_information(&output, vault->api_entry.at(item_index(current_item(menu))));
+			get_pass_information(output, value_at(vault->api_entry, item_index(current_item(menu))));
 
-            if (output.size() == 0) break;
+            if (size(output) == 0) break;
 
 			// create a username_password pop up
-			username_password_display(windows, output, vault->api_entry.at(item_index(current_item(menu))), menu);
+			username_password_display(windows, output, value_at(vault->api_entry, item_index(current_item(menu))), menu);
 
 			// clear the vector
-			output.clear();
+			erase_list(output);
 			break;
 
 		// copy password into clipboard
 		case 'c':
 			// check if item is directory, if not copy to clipboard and confirm with a message
-			if (vault->entry.at(item_index(current_item(menu))).find("/") != std::string::npos)
+			if (strstr(value_at(vault->entry, item_index(current_item(menu))), "/") != NULL)
 				break;
-			if (copy_to_clipboard(vault->api_entry.at(item_index(current_item(menu))))){
+			if (copy_to_clipboard(value_at(vault->api_entry, item_index(current_item(menu))))){
                 print_message(windows, "Password copied to clipboard for 45 seconds");
             } else {
                 print_message(windows, "Password is not copied to clipboard");
@@ -129,22 +129,22 @@ int navigation(MENU *menu, std::vector<WINDOW *> *windows, struct vault *vault) 
 		case 'd':
 			// Text is different whether it's a directory or not
 			prompt = "Sure you want to delete the entry?\nYou cannot undo that (y/n)";
-			if (vault->entry.at(item_index(current_item(menu))).find("/") != std::string::npos)
+			if (strstr(value_at(vault->entry, item_index(current_item(menu))), "/") != NULL)
 				prompt = "Sure you want to delete the directory?\nDeletes all entries inside this directory.\nYou cannot undo that (y/n)";
 
 			// start confirmation prompt and execute command, if confirmed
 			if (centered_confirm_prompt(menu, windows, CONFIRM_PROMPT_WINDOW, prompt, BORDER_COLOR, true)) {
-				delete_entry(vault->api_entry.at(item_index(current_item(menu))));
+				delete_entry(value_at(vault->api_entry, item_index(current_item(menu))));
 				return item_index(current_item(menu));
 			}
 			break;
 
 		// edit a password using nano
 		case 'e':
-			if (vault->entry.at(item_index(current_item(menu))).find("/") != std::string::npos)
+			if (strstr(value_at(vault->entry, item_index(current_item(menu))), "/") != NULL)
 				break;
 			endwin();
-			edit_password(vault->api_entry.at(item_index(current_item(menu))));
+			edit_password(value_at(vault->api_entry, item_index(current_item(menu))));
 			initscr();
 			return item_index(current_item(menu));
 
@@ -154,16 +154,16 @@ int navigation(MENU *menu, std::vector<WINDOW *> *windows, struct vault *vault) 
 
 		// rename an entry
 		case 'r':
-			output.push_back(rename(windows, menu, vault->api_entry.at(item_index(current_item(menu)))));
-			if (output.at(0) == "/") {
-				output.clear();
+			push_back(output, rename_form(windows, menu, value_at(vault->api_entry, item_index(current_item(menu)))));
+			if (*(char*)value_at(output, 0) == '/') {
+                erase_list(output);
 				print_message(windows, "New name mustn't end with '/'");
 				break;
 			}
-			if (output.at(0) == "")
+			if (*(char*)value_at(output, 0) == '\0') 
 				break;
-			rename_password(vault->api_entry.at(item_index(current_item(menu))), output[0]);
-			output.clear();
+			rename_password(value_at(vault->api_entry, item_index(current_item(menu))), value_at(output, 0));
+            erase_list(output);
 			return item_index(current_item(menu));
 
 		// show help message
@@ -190,8 +190,8 @@ int navigation(MENU *menu, std::vector<WINDOW *> *windows, struct vault *vault) 
 		set_color(menu);
 
 		// refresh window
-		wrefresh(windows->at(MENU_WINDOW));
-		wrefresh(windows->at(PATTERN_WINDOW));
+		wrefresh(windows[MENU_WINDOW]);
+		wrefresh(windows[PATTERN_WINDOW]);
 		refresh();
 	}
 

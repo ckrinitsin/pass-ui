@@ -1,17 +1,14 @@
 #include "../utils/shell-scripts.h"
 #include "../ui/init-ui.h"
 
-#include <filesystem>
-#include <fstream>
-#include <memory>
-#include <string>
 #include <string.h>
-#include <vector>
+#include <errno.h>
+#include <dirent.h>
 
 int init();
 
 // Returns the path to the password vault
-std::string load_vault_path();
+char *load_vault_path();
 
 // Saves password entries from the vault into struct
-std::vector<std::string> get_all_entries(std::string vault_dir, size_t count, bool api);
+linked_list *get_all_entries(char *vault_dir, size_t count, bool api);

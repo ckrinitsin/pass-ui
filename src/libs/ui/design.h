@@ -1,9 +1,8 @@
+#include "../utils/structs.h"
+
 #include <menu.h>
 #include <ncurses.h>
-#include <string>
 #include <string.h>
-#include <vector>
-#include <algorithm>
 
 // DEFINE WINDOWS MACROS
 #define MENU_WINDOW 0
@@ -25,15 +24,15 @@ void init_color_pairs();
 
 void set_color(MENU *menu);
 
-void set_size_menu_window(MENU* menu, std::vector<WINDOW*> *windows, ITEM* item);
+void set_size_menu_window(MENU* menu, WINDOW *windows[], ITEM* item);
 
-void print_box_with_title(std::vector<WINDOW*> *windows, int window_index, size_t y, size_t x, size_t width, size_t height, std::string title, std::string value, bool centered, int color);
-bool centered_confirm_prompt(MENU *menu, std::vector<WINDOW*> *windows, int window_index, std::string value, int color, bool text_centered);
+void print_box_with_title(WINDOW *windows[], int window_index, size_t y, size_t x, size_t width, size_t height, char *title, char *value, bool centered, int color);
+bool centered_confirm_prompt(MENU *menu, WINDOW *windows[], int window_index, char *value, int color, bool text_centered);
 
-void print_message(std::vector<WINDOW*> *windows, std::string message);
-void delete_message(std::vector<WINDOW*> *windows);
+void print_message(WINDOW *windows[], char *message);
+void delete_message(WINDOW *windows[]);
 
-void remove_window(std::vector<WINDOW*> *windows, int window_index);
+void remove_window_index(WINDOW *windows[], int window_index);
 
 void remove_window(WINDOW *window);
 

@@ -1,7 +1,8 @@
 #include "design.h"
+#include <string.h>
 
 // saves message to make it accessible accross methods
-std::string pattern_message;
+char *pattern_message;
 
 void init_color_pairs() {
 	init_pair(FILE_COLOR, COLOR_BLACK, COLOR_WHITE);
@@ -10,8 +11,8 @@ void init_color_pairs() {
 
 void set_color(MENU *menu) {
 	// check if the current item is a directory and change the design whether it is or not
-	std::string current_item_name(item_name(current_item(menu)));
-	if (current_item_name.find('/') != std::string::npos) {
+	const char *current_item_name = item_name(current_item(menu));
+	if (strstr(current_item_name, "/") != NULL) {
 		set_menu_fore(menu, COLOR_PAIR(DIR_COLOR));
 	}
 	else {
@@ -19,10 +20,12 @@ void set_color(MENU *menu) {
 	}
 }
 
-void set_size_menu_window(MENU *menu, std::vector<WINDOW *> *windows, ITEM *item) {
+void set_size_menu_window(MENU* menu, WINDOW *windows[], ITEM* item) {
 	// delete the menu window, to create a new one, and unpost menu
-	unpost_menu(menu);
-	delwin(windows->at(MENU_WINDOW));
+    if (item != NULL) {
+        unpost_menu(menu);
+        delwin(windows[MENU_WINDOW]);
+    }
 
 	// create menu window
 	WINDOW *menu_win = newwin(LINES - 2, COLS, 1, 0);
@@ -44,22 +47,23 @@ void set_size_menu_window(MENU *menu, std::vector<WINDOW *> *windows, ITEM *item
 		set_current_item(menu, item);
 
 	// move the pattern window to the right position
-	mvwin(windows->at(PATTERN_WINDOW), LINES - 1, 0);
+	mvwin(windows[PATTERN_WINDOW], LINES - 1, 0);
 
 	// remove message to not make it 'permanent'
-	delete_message(windows);
+    if (item != NULL)
+	    delete_message(windows);
 
 	// refresh menu window
 	refresh();
 	wrefresh(menu_win);
-	wrefresh(windows->at(PATTERN_WINDOW));
+	wrefresh(windows[PATTERN_WINDOW]);
 
 	// set references to new windows
-	windows->at(MENU_WINDOW) = menu_win;
-	windows->at(MENU_SUB_WINDOW) = menu_sub_win;
+	windows[MENU_WINDOW] = menu_win;
+	windows[MENU_SUB_WINDOW] = menu_sub_win;
 }
 
-void print_box_with_title(std::vector<WINDOW *> *windows, int window_index, size_t y, size_t x, size_t width, size_t height, std::string title, std::string value, bool centered, int color) {
+void print_box_with_title(WINDOW *windows[], int window_index, size_t y, size_t x, size_t width, size_t height, char *title, char *value, bool centered, int color) {
 	// initialize window
 	WINDOW *win = newwin(height, width, y, x);
 	keypad(win, TRUE);
@@ -68,37 +72,43 @@ void print_box_with_title(std::vector<WINDOW *> *windows, int window_index, size
 	if (color != -1)
 		wattron(win, COLOR_PAIR(color));
 	box(win, 0, 0);
-	mvwprintw(win, 0, 2, "%s", title.c_str());
+	mvwprintw(win, 0, 2, "%s", title);
 	if (color != -1)
 		wattroff(win, COLOR_PAIR(color));
-	mvwprintw(win, height / 2, centered ? (width / 2) - (value.length() / 2) : 1, "%s", value.c_str());
+	mvwprintw(win, height / 2, centered ? (width / 2) - (strlen(value) / 2) : 1, "%s", value);
 
 	// refresh and set reference
 	wrefresh(win);
 	refresh();
-	windows->at(window_index) = win;
+	windows[window_index] = win;
 }
 
-bool centered_confirm_prompt(MENU *menu, std::vector<WINDOW *> *windows, int window_index, std::string value, int color, bool text_centered) {
+bool centered_confirm_prompt(MENU *menu, WINDOW *windows[], int window_index, char *value, int color, bool text_centered) {
 	// create an array where each line is an element
-	size_t pos;
-	std::string copy(value);
-	std::vector<std::string> lines;
-	while ((pos = copy.find('\n')) != std::string::npos) {
-		lines.push_back(copy.substr(0, pos));
-		copy.erase(0, pos + 1);
-	}
-	lines.push_back(copy);
+    size_t pos;
+    char* copy = strdup(value);
+
+    // Assuming you want to store lines in an array of strings
+    linked_list *lines = NULL;
+
+    while ((pos = strcspn(copy, "\n")) != strlen(copy)) {
+        copy[pos] = '\0';
+        push_back(lines, strdup(copy));
+        copy += pos + 1;
+    }
+
+    push_back(lines, strdup(copy));
 
 	// initialize height with 'room' for the box
-	size_t height = lines.size() + 2;
+	size_t height = size(lines) + 2;
 
 	// get max width
 	size_t width = 0;
-	for (std::string s : lines) {
-		if (s.size() > width)
-			width = s.size();
-	}
+    for (size_t i = 0; i < size(lines); i++) {
+        char *cur = value_at(lines, i);
+        if (strlen(cur) > width)
+            width = strlen(cur);
+    }
 
 	// padding
     width += 4;
@@ -111,11 +121,12 @@ bool centered_confirm_prompt(MENU *menu, std::vector<WINDOW *> *windows, int win
 	if (color != -1)
 		wattron(win, COLOR_PAIR(color));
 	box(win, 0, 0);
-	for (size_t i = 0; i < lines.size(); i++) {
+	for (size_t i = 0; i < size(lines); i++) {
+        char *cur = value_at(lines, i);
 		if (text_centered) {
-            mvwprintw(win, i + 1, (width / 2) - (lines.at(i).size() / 2), "%s", lines.at(i).c_str());
+            mvwprintw(win, i + 1, (width / 2) - (strlen(cur) / 2), "%s", cur);
         } else {
-            mvwprintw(win, i + 1, 2, "%s", lines.at(i).c_str());
+            mvwprintw(win, i + 1, 2, "%s", cur);
         }
 	}
 	if (color != -1)
@@ -124,7 +135,7 @@ bool centered_confirm_prompt(MENU *menu, std::vector<WINDOW *> *windows, int win
 	// refresh and set reference
 	wrefresh(win);
 	refresh();
-	windows->at(window_index) = win;
+	windows[window_index] = win;
 
 	// only react if n, y or q was pressed
 	int c;
@@ -139,37 +150,38 @@ bool centered_confirm_prompt(MENU *menu, std::vector<WINDOW *> *windows, int win
 			break;
 	}
 
-	remove_window(windows, window_index);
+	remove_window_index(windows, window_index);
 	return c == 'y';
 }
 
-void print_message(std::vector<WINDOW *> *windows, std::string message) {
-    if (windows->at(MESSAGE_WINDOW)) remove_window(windows, MESSAGE_WINDOW);
+void print_message(WINDOW *windows[], char *message) {
+    if (windows[MESSAGE_WINDOW]) remove_window_index(windows, MESSAGE_WINDOW);
 	// initialize window
-	windows->at(MESSAGE_WINDOW) = newwin(1, message.length(), LINES - 1, (COLS / 2) - (message.length() / 2));
+	windows[MESSAGE_WINDOW] = newwin(1, strlen(message), LINES - 1, (COLS / 2) - (strlen(message) / 2));
 
 	// print message in color
-	wattron(windows->at(MESSAGE_WINDOW), COLOR_PAIR(BORDER_COLOR));
-	mvwprintw(windows->at(MESSAGE_WINDOW), 0, 0, "%s", message.c_str());
-	wattroff(windows->at(MESSAGE_WINDOW), COLOR_PAIR(BORDER_COLOR));
+	wattron(windows[MESSAGE_WINDOW], COLOR_PAIR(BORDER_COLOR));
+	mvwprintw(windows[MESSAGE_WINDOW], 0, 0, "%s", message);
+	wattroff(windows[MESSAGE_WINDOW], COLOR_PAIR(BORDER_COLOR));
 
 	// set global variable and refresh
 	pattern_message = message;
-	wrefresh(windows->at(MESSAGE_WINDOW));
+	wrefresh(windows[MESSAGE_WINDOW]);
 }
 
-void delete_message(std::vector<WINDOW *> *windows) {
+void delete_message(WINDOW *windows[]) {
 	// delete window and reset global variable
-	remove_window(windows, MESSAGE_WINDOW);
+	if (windows[MESSAGE_WINDOW])
+        remove_window_index(windows, MESSAGE_WINDOW);
 	pattern_message = "";
 }
 
-void remove_window(std::vector<WINDOW *> *windows, int window_index) {
+void remove_window_index(WINDOW *windows[], int window_index) {
 	// makes the window empty, deletes it and sets the pointer
-	wclear(windows->at(window_index));
-	wrefresh(windows->at(window_index));
-	delwin(windows->at(window_index));
-	windows->at(window_index) = NULL;
+	wclear(windows[window_index]);
+	wrefresh(windows[window_index]);
+	delwin(windows[window_index]);
+	windows[window_index] = NULL;
 }
 
 void remove_window(WINDOW *window) {

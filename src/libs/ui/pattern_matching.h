@@ -1,7 +1,8 @@
-#include "../utils/structs.h"
-#include "design.h"
+// #include "../utils/structs.h"
+#include "../utils/string-helper.h"
+#include "form.h"
 
-std::vector<ITEM *> start_pattern_matching(MENU *menu, std::vector<WINDOW*> *windows, std::vector<std::string> real_paths);
+linked_list *start_pattern_matching(MENU *menu, WINDOW *windows[], linked_list *real_paths);
 
-std::vector<ITEM *> search_menu_pattern(MENU *menu, std::vector<std::string> pattern_matching_buffer, std::vector<std::string> real_paths);
+linked_list *search_menu_pattern(MENU *menu, linked_list *pattern_matching_buffer, linked_list *real_paths);
 

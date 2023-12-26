@@ -1,16 +1,20 @@
-#include <string>
+#include "string-helper.h"
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 // Defines the max length of a directory name
 #define max_path_size 512
 
-FILE *get_command_pipe(std::string arg);
+FILE *get_command_pipe(char *arg);
 
-FILE *findscript(std::string arg);
+FILE *findscript(char *arg);
 
-FILE *findscript_api(std::string arg);
+FILE *findscript_api(char *arg);
 
-size_t get_number_entries(std::string vault_dir);
+size_t get_number_entries(char *vault_dir);
 
-FILE *countscript(std::string arg);
+FILE *countscript(char *arg);
 
-FILE *get_password_script(std::string arg);
+FILE *get_password_script(char *arg);
