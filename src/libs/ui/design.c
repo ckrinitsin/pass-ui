@@ -171,8 +171,8 @@ void print_message(WINDOW *windows[], char *message) {
 
 void delete_message(WINDOW *windows[]) {
 	// delete window and reset global variable
-	if (windows[MESSAGE_WINDOW])
-        remove_window_index(windows, MESSAGE_WINDOW);
+	// if (windows[MESSAGE_WINDOW])
+        // remove_window_index(windows, MESSAGE_WINDOW);
 	pattern_message = "";
 }
 

@@ -2,7 +2,7 @@
 #include "../utils/shell-scripts.h"
 // #include "../ui/design.h"
 
-void get_pass_information(linked_list *information, char *argument);
+linked_list *get_pass_information(linked_list *information, char *argument);
 
 bool copy_to_clipboard(char *argument);
 

@@ -102,7 +102,7 @@ int navigation(MENU *menu, WINDOW *windows[], struct vault *vault) {
 			// if the item is not a directory, but a password file, get the information into a vector
 			if (strstr(value_at(vault->entry, item_index(current_item(menu))), "/") != NULL)
 				break;
-			get_pass_information(output, value_at(vault->api_entry, item_index(current_item(menu))));
+			output = get_pass_information(output, value_at(vault->api_entry, item_index(current_item(menu))));
 
             if (size(output) == 0) break;
 
@@ -110,7 +110,7 @@ int navigation(MENU *menu, WINDOW *windows[], struct vault *vault) {
 			username_password_display(windows, output, value_at(vault->api_entry, item_index(current_item(menu))), menu);
 
 			// clear the vector
-			erase_list(output);
+			output = erase_heap(output);
 			break;
 
 		// copy password into clipboard

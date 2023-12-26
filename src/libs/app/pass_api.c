@@ -1,18 +1,18 @@
 #include "pass_api.h"
 
-void get_pass_information(linked_list *information, char *argument) {
+linked_list *get_pass_information(linked_list *information, char *argument) {
 	// open a pipe to the command and count the number of entries
 	FILE *pipe = get_password_script(argument);
 
 	char buffer[max_path_size];
 
 	// tries to read the pipe, storing the filename into the vector
-    if (fgets(buffer, max_path_size, pipe) == NULL) return;
+    if (fgets(buffer, max_path_size, pipe) == NULL) return NULL;
 
     *(buffer + strlen(buffer) - 1) = '\0';
-    push_back(information, buffer);
+    information = push_back(information, allocate_string(buffer));
 
-    if (fgets(buffer, max_path_size, pipe) == NULL) return;
+    if (fgets(buffer, max_path_size, pipe) == NULL) return NULL;
 
     *(buffer + strlen(buffer) - 1) = '\0';
     // removes the "login: " substring if present
@@ -21,7 +21,7 @@ void get_pass_information(linked_list *information, char *argument) {
         for (int i = 7; i <= strlen(buffer); i++) {
             new_login[i-7] = buffer[i];
         }
-        push_back(information, new_login);
+        information = push_back(information, allocate_string(new_login));
     }
 
 	// close the pipe
@@ -29,6 +29,8 @@ void get_pass_information(linked_list *information, char *argument) {
 		perror("pclose failed\n");
 		exit(-1);
 	}
+
+    return information;
 }
 
 bool copy_to_clipboard(char *argument) {
